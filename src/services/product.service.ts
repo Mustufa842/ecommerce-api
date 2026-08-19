@@ -55,7 +55,7 @@ export const getProducts = async (query: ProductQuery): Promise<PaginatedProduct
     Product.countDocuments(filter),
   ]);
 
-  return { products: products as IProduct[], total, page, totalPages: Math.ceil(total / limit), limit };
+  return { products: products as unknown as IProduct[], total, page, totalPages: Math.ceil(total / limit), limit };
 };
 
 export const getProductById = async (id: string): Promise<IProduct> => {
