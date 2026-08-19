@@ -11,7 +11,6 @@ export const initiatePayment = catchAsync(async (req: AuthRequest, res: Response
   const order = await Order.findById(orderId);
   if (!order) throw new AppError('Order not found', 404);
 
-  // Users can only pay for their own orders
   if (order.user.toString() !== req.user!.id && req.user!.role !== 'admin') {
     throw new AppError('You are not authorized to pay for this order', 403);
   }
@@ -24,20 +23,19 @@ export const initiatePayment = catchAsync(async (req: AuthRequest, res: Response
     throw new AppError('Cannot process payment for a cancelled order', 400);
   }
 
-  // Process payment through mock (or real) payment service
   const result = await processPayment(order.totalPrice, { paymentMethod, cardDetails });
 
   if (!result.success) {
-    return res.status(402).json({
+    res.status(402).json({
       status: 'fail',
       message: result.errorMessage || 'Payment failed',
     });
+    return;
   }
 
-  // Update order on successful payment
   order.paymentStatus = 'paid';
   order.paymentTransactionId = result.transactionId;
-  order.status = 'processing'; // Auto-advance from pending → processing
+  order.status = 'processing';
   await order.save();
 
   res.status(200).json({
