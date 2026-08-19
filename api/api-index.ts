@@ -1,19 +1,19 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import mongoose from 'mongoose';
 import app from '../src/app';
-import { connectDB } from '../src/config/database';
 
-// Connect to DB once (cached across serverless invocations)
 let isConnected = false;
-const ensureDB = async () => {
-  if (!isConnected) {
-    await connectDB();
-    isConnected = true;
-  }
-};
+
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGO_URI as string);
+  isConnected = true;
+  console.log('MongoDB connected');
+}
 
 export default async function handler(req: any, res: any) {
-  await ensureDB();
-  return app(req, res);
+  await connectDB();
+  return (app as any)(req, res);
 }
